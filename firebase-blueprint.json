@@ -1,0 +1,151 @@
+{
+  "entities": {
+    "Dessert": {
+      "title": "Dessert",
+      "description": "A luxury dessert masterpiece",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string" },
+        "description": { "type": "string" },
+        "price": { "type": "number" },
+        "category": { "type": "string" },
+        "image": { "type": "string" },
+        "ingredients": { "type": "array", "items": { "type": "string" } },
+        "rating": { "type": "number" },
+        "chefNote": { "type": "string" },
+        "reviews": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "id": { "type": "string" },
+              "user": { "type": "string" },
+              "rating": { "type": "number" },
+              "comment": { "type": "string" }
+            }
+          }
+        },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["name", "price", "category", "image"]
+    },
+    "Order": {
+      "title": "Order",
+      "description": "A customer order for desserts",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "customerName": { "type": "string" },
+        "customerEmail": { "type": "string" },
+        "customerPhone": { "type": "string" },
+        "deliveryDetails": {
+          "type": "object",
+          "properties": {
+            "address": { "type": "string" },
+            "city": { "type": "string" },
+            "state": { "type": "string" },
+            "pincode": { "type": "string" },
+            "landmark": { "type": "string" },
+            "specialInstructions": { "type": "string" }
+          }
+        },
+        "items": { "type": "array" },
+        "total": { "type": "number" },
+        "address": { "type": "string" },
+        "latitude": { "type": "number" },
+        "longitude": { "type": "number" },
+        "paymentMethod": { "type": "string" },
+        "status": { "type": "string" },
+        "statusMessage": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["userId", "items", "total", "address", "status"]
+    },
+    "User": {
+      "title": "User",
+      "description": "User profile and role information",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string" },
+        "email": { "type": "string" },
+        "fullName": { "type": "string" },
+        "role": { "type": "string", "enum": ["admin", "client"] },
+        "defaultAddress": { "type": "string" },
+        "city": { "type": "string" },
+        "state": { "type": "string" },
+        "pincode": { "type": "string" },
+        "landmark": { "type": "string" },
+        "phoneNumber": { "type": "string" },
+        "loyaltyPoints": { "type": "number" },
+        "isVIP": { "type": "boolean" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["uid", "email", "role"]
+    },
+    "Coupon": {
+      "title": "Coupon",
+      "description": "Discount coupon for orders",
+      "type": "object",
+      "properties": {
+        "code": { "type": "string" },
+        "discount": { "type": "number" },
+        "type": { "type": "string", "enum": ["percent", "fixed"] },
+        "active": { "type": "boolean" },
+        "minPurchase": { "type": "number" },
+        "expiryDate": { "type": "string", "format": "date-time" },
+        "maxUses": { "type": "number" },
+        "usageCount": { "type": "number" },
+        "perUserLimit": { "type": "number" }
+      },
+      "required": ["code", "discount", "active"]
+    },
+    "Redemption": {
+      "title": "Redemption",
+      "description": "Tracking coupon usage per user",
+      "type": "object",
+      "properties": {
+        "couponId": { "type": "string" },
+        "userId": { "type": "string" },
+        "orderId": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["couponId", "userId"]
+    },
+    "Cart": {
+      "title": "Cart",
+      "description": "User's shopping cart synced across devices",
+      "type": "object",
+      "properties": {
+        "items": { "type": "array" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["items"]
+    },
+    "Settings": {
+      "title": "Settings",
+      "description": "Global application settings and themes",
+      "type": "object",
+      "properties": {
+        "active": { "type": "boolean" },
+        "theme": { "type": "string" },
+        "startDate": { "type": "string", "format": "date-time" },
+        "endDate": { "type": "string", "format": "date-time" },
+        "title": { "type": "string" },
+        "description": { "type": "string" }
+      }
+    }
+  },
+  "firestore": {
+    "desserts": { "schema": "Dessert", "description": "Collection of luxury desserts" },
+    "orders": { "schema": "Order", "description": "Collection of customer orders" },
+    "users": { "schema": "User", "description": "Collection of user profiles" },
+    "coupons": { "schema": "Coupon", "description": "Collection of discount coupons" },
+    "redemptions": { "schema": "Redemption", "description": "Collection of coupon redemptions" },
+    "carts": { "schema": "Cart", "description": "Collection of user carts" },
+    "settings": { "schema": "Settings", "description": "Global app settings" }
+  }
+}

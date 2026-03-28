@@ -1,0 +1,5 @@
+{
+  "name": "Frosty Bite",
+  "description": "Ultra-luxury premium dessert boutique experience.",
+  "requestFramePermissions": ["geolocation"]
+}

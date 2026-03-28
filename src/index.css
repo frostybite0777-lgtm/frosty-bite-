@@ -1,0 +1,154 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;0,800;0,900;1,400;1,500;1,600;1,700;1,800;1,900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;0,700;1,300;1,400;1,500;1,600;1,700&family=Inter:wght@100;200;300;400;500;600;700;800;900&display=swap');
+@import "tailwindcss";
+@import "leaflet/dist/leaflet.css";
+
+@theme {
+  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-serif: "Cormorant Garamond", serif;
+  
+  --color-luxury-black: #0A0A0A;
+  --color-luxury-gold: #D4AF37;
+  --color-luxury-gold-light: #F9E29C;
+  --color-luxury-cream: #F5F5F0;
+  --color-luxury-gray: #1A1A1A;
+}
+
+@layer base {
+  body {
+    @apply bg-luxury-black text-luxury-cream font-sans antialiased;
+  }
+  
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-serif;
+  }
+}
+
+@layer components {
+  .gold-text-glow {
+    text-shadow: 0 0 10px rgba(212, 175, 55, 0.3);
+  }
+  
+  .glass-card {
+    @apply bg-white/5 backdrop-blur-md border border-white/10;
+  }
+  
+  .gold-button {
+    @apply bg-luxury-gold text-luxury-black font-bold uppercase tracking-widest text-[10px] py-4 px-8 rounded-full transition-all hover:bg-luxury-gold-light hover:scale-105 active:scale-95 disabled:opacity-50 disabled:scale-100;
+  }
+  
+  .luxury-input {
+    @apply bg-luxury-gray border border-white/10 rounded-full py-4 px-6 text-sm focus:outline-none focus:border-luxury-gold/50 transition-all;
+  }
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 4px;
+}
+
+::-webkit-scrollbar-track {
+  @apply bg-luxury-black;
+}
+
+::-webkit-scrollbar-thumb {
+  @apply bg-luxury-gold/20 rounded-full hover:bg-luxury-gold/40;
+}
+
+@theme {
+  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-serif: "Playfair Display", serif;
+
+  --color-luxury-black: var(--bg-color, #0F0F0F);
+  --color-luxury-gold: var(--accent-color, #D4AF37);
+  --color-luxury-cream: var(--text-color, #F8F5F0);
+  --color-luxury-pink: #F7D6E0;
+}
+
+:root {
+  --bg-color: #0F0F0F;
+  --accent-color: #D4AF37;
+  --text-color: #F8F5F0;
+  --secondary-color: #1A1A1A;
+}
+
+@layer base {
+  body {
+    background-color: var(--bg-color);
+    color: var(--text-color);
+    @apply font-sans antialiased transition-colors duration-500;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-serif;
+  }
+}
+
+@layer components {
+  .glass-card {
+    @apply bg-white/5 backdrop-blur-lg border border-white/10 shadow-2xl;
+  }
+
+  .gold-button {
+    @apply bg-luxury-gold text-luxury-black font-bold py-4 px-10 rounded-full transition-all duration-300 hover:scale-105 hover:shadow-[0_0_20px_rgba(212,175,55,0.5)] active:scale-95 text-sm uppercase tracking-widest;
+  }
+
+  .secondary-button {
+    @apply bg-white/5 text-luxury-cream font-bold py-4 px-10 rounded-full border border-white/10 transition-all duration-300 hover:bg-white/10 active:scale-95 text-sm uppercase tracking-widest;
+  }
+
+  .gold-text-glow {
+    @apply text-luxury-gold drop-shadow-[0_0_8px_rgba(212,175,55,0.6)];
+  }
+
+  .mobile-card {
+    @apply bg-white/5 backdrop-blur-lg border border-white/5 shadow-2xl rounded-[2rem] p-6;
+  }
+}
+
+/* Hide scrollbar but keep functionality */
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+/* Page Transitions */
+.page-enter {
+  opacity: 0;
+  transform: translateY(10px);
+}
+.page-enter-active {
+  opacity: 1;
+  transform: translateY(0);
+  transition: opacity 400ms, transform 400ms;
+}
+.page-exit {
+  opacity: 1;
+  transform: translateY(0);
+}
+.page-exit-active {
+  opacity: 0;
+  transform: translateY(-10px);
+  transition: opacity 400ms, transform 400ms;
+}
+
+/* Custom scrollbar for luxury feel */
+::-webkit-scrollbar {
+  width: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: #0F0F0F;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #D4AF37;
+  border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #B8962E;
+}

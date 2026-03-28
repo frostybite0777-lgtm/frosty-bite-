@@ -1,0 +1,158 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // ===============================================================
+    // Assumed Data Model
+    // ===============================================================
+    //
+    // Collection: desserts
+    // Fields: name, description, price, category, image, ingredients, rating, chefNote, reviews, createdAt, updatedAt
+    //
+    // Collection: orders
+    // Fields: userId, customerName, customerEmail, customerPhone, items, total, address, paymentMethod, status, statusMessage, createdAt, updatedAt
+    //
+    // Collection: users
+    // Fields: uid, email, fullName, role, defaultAddress, createdAt
+    //
+    // Collection: coupons
+    // Fields: code, discount, type, active, minPurchase, expiryDate, maxUses, usageCount, perUserLimit
+    //
+    // Collection: redemptions
+    // Fields: couponId, userId, orderId, createdAt
+    //
+    // ===============================================================
+
+    // ===============================================================
+    // Helper Functions
+    // ===============================================================
+    
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+
+    function isAdmin() {
+      return isAuthenticated() &&
+        (
+          request.auth.token.email == "frostybite0777@gmail.com" ||
+          (exists(/databases/$(database)/documents/users/$(request.auth.uid)) && 
+           get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin')
+        );
+    }
+
+    function hasOnlyAllowedFields(fields) {
+      return request.resource.data.keys().hasOnly(fields);
+    }
+
+    function isValidEmail(email) {
+      return email is string && email.matches("^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$");
+    }
+
+    // ===============================================================
+    // Domain Validators
+    // ===============================================================
+
+    function isValidUser(data) {
+      return hasOnlyAllowedFields(['uid', 'email', 'fullName', 'role', 'defaultAddress', 'city', 'state', 'pincode', 'landmark', 'phoneNumber', 'createdAt', 'updatedAt', 'loyaltyPoints', 'isVIP']) &&
+             (!('uid' in data) || (data.uid is string && data.uid == request.auth.uid)) &&
+             (!('email' in data) || isValidEmail(data.email)) &&
+             (!('role' in data) || data.role in ['admin', 'client']) &&
+             (!('fullName' in data) || (data.fullName is string && data.fullName.size() < 100)) &&
+             (!('defaultAddress' in data) || (data.defaultAddress is string && data.defaultAddress.size() < 500)) &&
+             (!('city' in data) || (data.city is string && data.city.size() < 100)) &&
+             (!('state' in data) || (data.state is string && data.state.size() < 100)) &&
+             (!('pincode' in data) || (data.pincode is string && data.pincode.size() < 20)) &&
+             (!('landmark' in data) || (data.landmark is string && data.landmark.size() < 200)) &&
+             (!('phoneNumber' in data) || (data.phoneNumber is string && data.phoneNumber.size() < 20));
+    }
+
+    function isValidDessert(data) {
+      return hasOnlyAllowedFields(['id', 'name', 'description', 'price', 'category', 'image', 'ingredients', 'rating', 'chefNote', 'reviews', 'createdAt', 'updatedAt']) &&
+             data.name is string && data.name.size() > 0 && data.name.size() < 200 &&
+             data.description is string && data.description.size() < 5000 &&
+             data.price is number && data.price >= 0 &&
+             data.category is string && data.category.size() < 100 &&
+             data.image is string && data.image.size() < 1000000 && // 1MB limit for base64 or long URLs
+             (!('ingredients' in data) || data.ingredients is list) &&
+             (!('reviews' in data) || data.reviews is list) &&
+             (!('rating' in data) || data.rating is number);
+    }
+
+    function isValidOrder(data) {
+      return hasOnlyAllowedFields(['userId', 'customerName', 'customerEmail', 'customerPhone', 'deliveryDetails', 'items', 'total', 'address', 'paymentMethod', 'status', 'statusMessage', 'createdAt', 'updatedAt']) &&
+             data.userId == request.auth.uid &&
+             data.items is list &&
+             data.total is number && data.total >= 0 &&
+             data.address is string && data.address.size() > 0 && data.address.size() < 1000 &&
+             data.status is string && data.status.size() < 50 &&
+             (!('customerEmail' in data) || isValidEmail(data.customerEmail)) &&
+             (!('customerPhone' in data) || (data.customerPhone is string && data.customerPhone.size() < 20)) &&
+             (!('deliveryDetails' in data) || data.deliveryDetails is map);
+    }
+
+    function isValidCart(data) {
+      return hasOnlyAllowedFields(['items', 'updatedAt']) &&
+             data.items is list && data.items.size() < 100;
+    }
+
+    function isValidRedemption(data) {
+      return hasOnlyAllowedFields(['couponId', 'userId', 'orderId', 'createdAt']) &&
+             data.userId == request.auth.uid &&
+             data.couponId is string &&
+             data.orderId is string;
+    }
+
+    // ===============================================================
+    // Rules
+    // ===============================================================
+
+    match /desserts/{dessertId} {
+      allow read: if true; // Publicly readable
+      allow write: if isAdmin() && isValidDessert(request.resource.data);
+    }
+
+    match /users/{userId} {
+      allow read: if isOwner(userId) || isAdmin();
+      allow create: if isAuthenticated() && isValidUser(request.resource.data) && 
+                    ((isOwner(userId) && request.resource.data.role == 'client') || isAdmin());
+      allow update: if isAuthenticated() && isValidUser(request.resource.data) && 
+                    ((isOwner(userId) && request.resource.data.role == resource.data.role) || isAdmin());
+    }
+
+    match /orders/{orderId} {
+      allow read: if isAuthenticated() && (resource.data.userId == request.auth.uid || isAdmin());
+      allow create: if isAuthenticated() && isValidOrder(request.resource.data);
+      allow update: if isAdmin();
+    }
+
+    match /coupons/{couponId} {
+      allow read: if true; // Allow guests to check coupons
+      allow update: if isAuthenticated() && 
+                    request.resource.data.diff(resource.data).affectedKeys().hasOnly(['usageCount']) &&
+                    request.resource.data.usageCount == resource.data.usageCount + 1;
+      allow write: if isAdmin();
+    }
+
+    match /redemptions/{redemptionId} {
+      allow read: if isAuthenticated() && (resource.data.userId == request.auth.uid || isAdmin());
+      allow create: if isAuthenticated() && isValidRedemption(request.resource.data);
+    }
+
+    match /carts/{userId} {
+      allow read, write: if isOwner(userId);
+    }
+
+    match /settings/{settingId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    // Default deny
+    match /{path=**} {
+      allow read, write: if false;
+    }
+  }
+}

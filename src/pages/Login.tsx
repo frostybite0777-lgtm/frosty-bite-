@@ -1,13 +1,15 @@
 import { motion, AnimatePresence } from 'framer-motion';
 import { useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
+import toast from 'react-hot-toast';
 import { 
   signInWithEmailAndPassword, 
   createUserWithEmailAndPassword, 
   signInWithPopup, 
   RecaptchaVerifier, 
   signInWithPhoneNumber,
-  ConfirmationResult
+  ConfirmationResult,
+  sendPasswordResetEmail
 } from 'firebase/auth';
 import { doc, setDoc, getDoc } from 'firebase/firestore';
 import { getFirebaseAuth, getFirebaseDb, googleProvider } from '../firebase';
@@ -122,6 +124,27 @@ export default function Login() {
     } catch (err: any) {
       console.error(err);
       setError('Google Sign-In failed.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleForgotPassword = async () => {
+    if (!email) {
+      setError('Please enter your email address first.');
+      return;
+    }
+    const auth = getFirebaseAuth();
+    if (!auth) return;
+
+    setLoading(true);
+    try {
+      await sendPasswordResetEmail(auth, email);
+      toast.success('Password reset link sent to your email!');
+      setError('');
+    } catch (err: any) {
+      console.error(err);
+      setError('Failed to send reset link. Please check the email.');
     } finally {
       setLoading(false);
     }
@@ -337,7 +360,18 @@ export default function Login() {
               </div>
             </div>
             <div className="space-y-2">
-              <label className="text-[10px] uppercase tracking-widest text-luxury-cream/50 ml-6">Password</label>
+              <div className="flex justify-between items-center ml-6 mr-2">
+                <label className="text-[10px] uppercase tracking-widest text-luxury-cream/50">Password</label>
+                {mode === 'login' && (
+                  <button 
+                    type="button"
+                    onClick={handleForgotPassword}
+                    className="text-[8px] uppercase tracking-widest text-luxury-gold hover:underline"
+                  >
+                    Forgot Password?
+                  </button>
+                )}
+              </div>
               <div className="relative">
                 <Lock className="absolute left-6 top-1/2 -translate-y-1/2 text-luxury-cream/20" size={16} />
                 <input

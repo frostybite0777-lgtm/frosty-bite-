@@ -76,7 +76,7 @@ import {
   deleteDoc,
   setDoc
 } from 'firebase/firestore';
-import { signInWithPopup } from 'firebase/auth';
+import { signInWithPopup, sendPasswordResetEmail } from 'firebase/auth';
 import { getFirebaseDb, getFirebaseAuth, googleProvider } from '../firebase';
 import { handleFirestoreError, OperationType } from '../utils/firestoreErrorHandler';
 import { useAuth } from '../context/AuthContext';
@@ -323,7 +323,7 @@ export default function Admin() {
     setIsLoggingIn(true);
     
     setTimeout(() => {
-      if (username === 'frosty bite' && password === 'admin123') {
+      if (username === 'frosty bite' && password === 'zainab123') {
         localStorage.setItem('admin_session', 'true');
         setIsLoggedIn(true);
         setError('');
@@ -332,6 +332,22 @@ export default function Admin() {
         setIsLoggingIn(false);
       }
     }, 1500);
+  };
+
+  const handleAdminPasswordReset = async () => {
+    const auth = getFirebaseAuth();
+    if (!auth?.currentUser?.email) {
+      setError('No authenticated user found to send reset email.');
+      return;
+    }
+
+    try {
+      await sendPasswordResetEmail(auth, auth.currentUser.email);
+      toast.success(`Password reset link sent to ${auth.currentUser.email}`);
+    } catch (err: any) {
+      console.error(err);
+      setError('Failed to send reset email.');
+    }
   };
 
   const handleFirebaseLogin = async () => {
@@ -613,7 +629,18 @@ export default function Admin() {
             </div>
             
             <div className="space-y-2">
-              <label className="text-[10px] uppercase tracking-widest text-luxury-cream/50 ml-6">Password</label>
+              <div className="flex justify-between items-center px-6">
+                <label className="text-[10px] uppercase tracking-widest text-luxury-cream/50">Password</label>
+                {user && isAdminUser && (
+                  <button 
+                    type="button"
+                    onClick={handleAdminPasswordReset}
+                    className="text-[8px] uppercase tracking-widest text-luxury-gold hover:underline"
+                  >
+                    Forgot Password?
+                  </button>
+                )}
+              </div>
               <input
                 type="password"
                 value={password}

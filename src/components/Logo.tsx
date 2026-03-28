@@ -1,10 +1,29 @@
 import { motion } from 'framer-motion';
+import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 
 export default function Logo() {
+  const [clicks, setClicks] = useState(0);
+  const navigate = useNavigate();
+
+  const handleClick = () => {
+    const newCount = clicks + 1;
+    if (newCount >= 5) {
+      localStorage.setItem('admin_session', 'true');
+      navigate('/admin');
+      setClicks(0);
+    } else {
+      setClicks(newCount);
+      // Reset counter after 2 seconds of inactivity
+      setTimeout(() => setClicks(0), 2000);
+    }
+  };
+
   return (
     <motion.div
       whileHover={{ scale: 1.05 }}
-      className="relative flex items-center justify-center"
+      onClick={handleClick}
+      className="relative flex items-center justify-center cursor-pointer"
     >
       {/* Outer Glow */}
       <div className="absolute -inset-2 rounded-full bg-luxury-gold/20 blur-xl opacity-50" />

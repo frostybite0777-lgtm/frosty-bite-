@@ -15,6 +15,7 @@ import { doc, setDoc, getDoc } from 'firebase/firestore';
 import { getFirebaseAuth, getFirebaseDb, googleProvider } from '../firebase';
 import { Mail, Lock, Phone, ArrowRight, Loader2, Chrome, ShieldCheck, AlertTriangle } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
+import Logo from '../components/Logo';
 
 export default function Login() {
   const { isConfigured } = useAuth();
@@ -27,19 +28,7 @@ export default function Login() {
   const [confirmationResult, setConfirmationResult] = useState<ConfirmationResult | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-  const [logoClicks, setLogoClicks] = useState(0);
   const navigate = useNavigate();
-
-  const handleLogoClick = () => {
-    const newCount = logoClicks + 1;
-    if (newCount >= 5) {
-      navigate('/admin');
-    } else {
-      setLogoClicks(newCount);
-      // Reset counter after 2 seconds of inactivity
-      setTimeout(() => setLogoClicks(0), 2000);
-    }
-  };
 
   const setupRecaptcha = () => {
     const auth = getFirebaseAuth();
@@ -280,18 +269,10 @@ export default function Login() {
       <motion.div
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
-        onClick={handleLogoClick}
-        className="relative z-20 mb-12 flex flex-col items-center cursor-default select-none"
+        className="relative z-20 mb-12 flex flex-col items-center select-none"
       >
-        <div className="w-20 h-20 border border-luxury-gold/30 rounded-full flex items-center justify-center mb-4 overflow-hidden bg-luxury-black/40 backdrop-blur-sm">
-          <img 
-            src="https://pub-1407f82391df4ab1951418d04be76914.r2.dev/uploads/0a744038-e29b-4db8-a8bf-4067fb31bb55.png" 
-            alt="Frosty Bite Logo" 
-            className="w-full h-full object-contain p-2"
-            referrerPolicy="no-referrer"
-          />
-        </div>
-        <h2 className="text-xl font-serif text-luxury-gold uppercase tracking-[0.4em]">Frosty Bite</h2>
+        <Logo />
+        <h2 className="text-xl font-serif text-luxury-gold uppercase tracking-[0.4em] mt-4">Frosty Bite</h2>
       </motion.div>
 
       {/* Auth Card */}

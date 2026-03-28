@@ -90,11 +90,13 @@ export default function Admin() {
   const [isLoggedIn, setIsLoggedIn] = useState(() => {
     return localStorage.getItem('admin_session') === 'true';
   });
-  const [username, setUsername] = useState('');
-  const [password, setPassword] = useState('');
-  const [error, setError] = useState('');
-  const [isLoggingIn, setIsLoggingIn] = useState(false);
   const [firestoreError, setFirestoreError] = useState<Error | null>(null);
+
+  useEffect(() => {
+    if (!isLoggedIn) {
+      navigate('/');
+    }
+  }, [isLoggedIn, navigate]);
 
   if (firestoreError) {
     throw firestoreError;
@@ -313,26 +315,10 @@ export default function Admin() {
     }
   };
 
-  const handleLogin = (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsLoggingIn(true);
-    
-    setTimeout(() => {
-      if (username === 'frosty bite' && password === 'zainab123') {
-        localStorage.setItem('admin_session', 'true');
-        setIsLoggedIn(true);
-        setError('');
-      } else {
-        setError('Invalid credentials. Please try again.');
-        setIsLoggingIn(false);
-      }
-    }, 1500);
-  };
-
   const handleLogout = () => {
     localStorage.removeItem('admin_session');
     setIsLoggedIn(false);
-    navigate('/admin');
+    navigate('/');
   };
 
   const updateOrderStatus = async (orderId: string, newStatus: string) => {
@@ -510,94 +496,7 @@ export default function Admin() {
   };
 
   if (!isLoggedIn) {
-    return (
-      <div className="relative min-h-screen bg-luxury-black flex flex-col items-center justify-center px-6 overflow-hidden">
-        <div className="absolute inset-0 z-0">
-          <div className="absolute inset-0 z-0 flex items-center justify-center overflow-hidden">
-            <div className="relative w-full h-full scale-[1.5]">
-              <video
-                autoPlay
-                muted
-                loop
-                playsInline
-                className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full h-full object-cover pointer-events-none opacity-100"
-              >
-                <source src="https://www.pexels.com/download/video/30335428/" type="video/mp4" />
-              </video>
-            </div>
-            <div className="absolute inset-0 bg-gradient-to-b from-luxury-black/40 via-transparent to-luxury-black/40" />
-            {/* Protective Masks */}
-            <div className="absolute top-0 left-0 right-0 h-[20%] bg-luxury-black z-10" />
-            <div className="absolute bottom-0 left-0 right-0 h-[20%] bg-luxury-black z-10" />
-          </div>
-        </div>
-
-        <motion.div
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="relative z-20 mb-12 flex flex-col items-center"
-        >
-          <div className="w-20 h-20 border border-luxury-gold/30 rounded-full flex items-center justify-center mb-4 overflow-hidden bg-luxury-black/40 backdrop-blur-sm">
-            <img 
-              src="https://pub-1407f82391df4ab1951418d04be76914.r2.dev/uploads/0a744038-e29b-4db8-a8bf-4067fb31bb55.png" 
-              alt="Frosty Bite Logo" 
-              className="w-full h-full object-contain p-2"
-              referrerPolicy="no-referrer"
-            />
-          </div>
-          <h2 className="text-xl font-serif text-luxury-gold uppercase tracking-[0.4em]">Frosty Bite</h2>
-        </motion.div>
-
-        <motion.div
-          initial={{ opacity: 0, y: 50 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="relative z-20 w-full max-w-md glass-card p-12 rounded-[2.5rem] space-y-10 border-white/5"
-        >
-          <div className="text-center space-y-2">
-            <h1 className="text-3xl font-serif text-luxury-cream uppercase tracking-widest">Admin Portal</h1>
-            <p className="text-[10px] text-luxury-cream/40 uppercase tracking-[0.3em]">Authorized Access Only</p>
-          </div>
-
-          <form onSubmit={handleLogin} className="space-y-8">
-            <div className="space-y-2">
-              <label className="text-[10px] uppercase tracking-widest text-luxury-cream/50 ml-6">Username</label>
-              <input
-                type="text"
-                value={username}
-                onChange={(e) => setUsername(e.target.value)}
-                className="w-full bg-white/5 border border-white/10 rounded-full py-4 px-8 text-sm focus:outline-none focus:border-luxury-gold/50 transition-all"
-                placeholder="Enter username"
-                disabled={isLoggingIn}
-              />
-            </div>
-            
-            <div className="space-y-2">
-              <div className="flex justify-between items-center px-6">
-                <label className="text-[10px] uppercase tracking-widest text-luxury-cream/50">Password</label>
-              </div>
-              <input
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                className="w-full bg-white/5 border border-white/10 rounded-full py-4 px-8 text-sm focus:outline-none focus:border-luxury-gold/50 transition-all"
-                placeholder="Enter password"
-                disabled={isLoggingIn}
-              />
-            </div>
-
-            {error && <p className="text-red-400 text-[10px] uppercase tracking-widest text-center">{error}</p>}
-
-            <button 
-              type="submit" 
-              disabled={isLoggingIn} 
-              className="w-full gold-button py-5 flex items-center justify-center gap-3 disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              {isLoggingIn ? <Loader2 size={18} className="animate-spin" /> : 'Enter Dashboard'}
-            </button>
-          </form>
-        </motion.div>
-      </div>
-    );
+    return null;
   }
 
   return (

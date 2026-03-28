@@ -34,6 +34,7 @@ export default function Payment() {
   const [suggestions, setSuggestions] = useState<string[]>([]);
   const [isLocating, setIsLocating] = useState(false);
   const [selectedMethod, setSelectedMethod] = useState<string | null>(null);
+  const [orderId, setOrderId] = useState<string | null>(null);
 
   // Success Confetti Effect
   useEffect(() => {
@@ -198,7 +199,9 @@ export default function Payment() {
         updatedAt: serverTimestamp(),
       };
 
-      await addDoc(collection(db, 'orders'), orderData);
+      const docRef = await addDoc(collection(db, 'orders'), orderData);
+      const newOrderId = docRef.id;
+      setOrderId(newOrderId);
 
       // Save address if requested
       if (saveAddress) {
@@ -229,13 +232,29 @@ export default function Payment() {
           await addDoc(collection(db, 'redemptions'), {
             couponId: appliedCoupon.id,
             userId: user.uid,
-            orderId: '', // Will update if needed, but simple record is enough
+            orderId: newOrderId,
             createdAt: serverTimestamp()
           });
         } catch (couponErr) {
           console.error("Error updating coupon usage:", couponErr);
         }
       }
+      
+      // Send WhatsApp Notification
+      const orderItems = cart.map(item => `${item.name} (x${item.quantity})`).join(', ');
+      const whatsappMessage = encodeURIComponent(
+        `✨ *New Order Confirmed!* ✨\n\n` +
+        `🆔 *Order ID:* #${newOrderId.toUpperCase()}\n` +
+        `👤 *Customer:* ${fullName}\n` +
+        `📞 *Phone:* ${phone}\n` +
+        `🍰 *Items:* ${orderItems}\n` +
+        `💰 *Total:* ₹${finalTotal}\n` +
+        `📍 *Address:* ${address}, ${city}, ${state} - ${pincode}\n\n` +
+        `Please process my order. Thank you! 🙏`
+      );
+      
+      // Open WhatsApp in a new tab
+      window.open(`https://wa.me/917735800239?text=${whatsappMessage}`, '_blank');
       
       setStep('success');
       clearCart();
@@ -341,14 +360,13 @@ export default function Payment() {
           </motion.button>
         </motion.div>
 
-        {/* Floating Order Number */}
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 1.2 }}
           className="absolute bottom-12 text-[10px] uppercase tracking-[0.5em] text-luxury-gold/30"
         >
-          Boutique Order Ref: #{Math.random().toString(36).substr(2, 9).toUpperCase()}
+          Boutique Order Ref: #{orderId?.toUpperCase() || '...'}
         </motion.div>
       </div>
     );

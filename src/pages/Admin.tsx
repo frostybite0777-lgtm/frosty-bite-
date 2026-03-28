@@ -76,10 +76,8 @@ import {
   deleteDoc,
   setDoc
 } from 'firebase/firestore';
-import { signInWithPopup, sendPasswordResetEmail } from 'firebase/auth';
-import { getFirebaseDb, getFirebaseAuth, googleProvider } from '../firebase';
+import { getFirebaseDb } from '../firebase';
 import { handleFirestoreError, OperationType } from '../utils/firestoreErrorHandler';
-import { useAuth } from '../context/AuthContext';
 import { Dessert } from '../types';
 import { DESSERTS } from '../data';
 import { DessertSkeleton, OrderSkeleton } from '../components/Skeleton';
@@ -89,8 +87,6 @@ type AdminTab = 'dashboard' | 'desserts' | 'orders' | 'coupons' | 'customers' | 
 export default function Admin() {
   const { tab } = useParams<{ tab: string }>();
   const navigate = useNavigate();
-  const { user, profile, loading: authLoading } = useAuth();
-  const isAdminUser = user?.email === 'frostybite0777@gmail.com' || profile?.role === 'admin';
   const [isLoggedIn, setIsLoggedIn] = useState(() => {
     return localStorage.getItem('admin_session') === 'true';
   });
@@ -178,8 +174,7 @@ export default function Admin() {
   const productFileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
-    if (authLoading || !isLoggedIn || !user || !isAdminUser) {
-      if (!authLoading && !user) setLoading(false);
+    if (!isLoggedIn) {
       return;
     }
     
@@ -303,7 +298,7 @@ export default function Admin() {
       unsubscribeCoupons();
       unsubscribeTheme();
     };
-  }, [isLoggedIn, user, isAdminUser, authLoading]);
+  }, [isLoggedIn]);
 
   const handleSaveTheme = async () => {
     const db = getFirebaseDb();
@@ -332,34 +327,6 @@ export default function Admin() {
         setIsLoggingIn(false);
       }
     }, 1500);
-  };
-
-  const handleAdminPasswordReset = async () => {
-    const auth = getFirebaseAuth();
-    if (!auth?.currentUser?.email) {
-      setError('No authenticated user found to send reset email.');
-      return;
-    }
-
-    try {
-      await sendPasswordResetEmail(auth, auth.currentUser.email);
-      toast.success(`Password reset link sent to ${auth.currentUser.email}`);
-    } catch (err: any) {
-      console.error(err);
-      setError('Failed to send reset email.');
-    }
-  };
-
-  const handleFirebaseLogin = async () => {
-    const auth = getFirebaseAuth();
-    if (!auth) return;
-    try {
-      await signInWithPopup(auth, googleProvider);
-      toast.success('Firebase Authenticated');
-    } catch (error) {
-      console.error("Firebase login failed:", error);
-      toast.error('Authentication failed');
-    }
   };
 
   const handleLogout = () => {
@@ -592,30 +559,6 @@ export default function Admin() {
           </div>
 
           <form onSubmit={handleLogin} className="space-y-8">
-            {!user && (
-              <button
-                type="button"
-                onClick={handleFirebaseLogin}
-                className="w-full bg-white/5 border border-white/10 rounded-full py-4 px-8 text-xs uppercase tracking-widest hover:bg-white/10 transition-all flex items-center justify-center gap-3"
-              >
-                <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" className="w-4 h-4" alt="Google" />
-                Step 1: Authenticate with Google
-              </button>
-            )}
-            
-            {user && (
-              <div className="bg-emerald-500/10 border border-emerald-500/20 rounded-full py-3 px-6 text-center">
-                <p className="text-[10px] text-emerald-500 uppercase tracking-widest">Authenticated as {user.email}</p>
-              </div>
-            )}
-
-            {user && !isAdminUser && (
-              <div className="bg-red-500/10 border border-red-500/20 rounded-xl py-3 px-6 text-center">
-                <p className="text-[10px] text-red-500 uppercase tracking-widest">Access Denied</p>
-                <p className="text-[8px] text-red-500/60 uppercase tracking-widest mt-1">{user.email} is not authorized</p>
-              </div>
-            )}
-
             <div className="space-y-2">
               <label className="text-[10px] uppercase tracking-widest text-luxury-cream/50 ml-6">Username</label>
               <input
@@ -631,15 +574,6 @@ export default function Admin() {
             <div className="space-y-2">
               <div className="flex justify-between items-center px-6">
                 <label className="text-[10px] uppercase tracking-widest text-luxury-cream/50">Password</label>
-                {user && isAdminUser && (
-                  <button 
-                    type="button"
-                    onClick={handleAdminPasswordReset}
-                    className="text-[8px] uppercase tracking-widest text-luxury-gold hover:underline"
-                  >
-                    Forgot Password?
-                  </button>
-                )}
               </div>
               <input
                 type="password"
@@ -655,7 +589,7 @@ export default function Admin() {
 
             <button 
               type="submit" 
-              disabled={isLoggingIn || !isAdminUser} 
+              disabled={isLoggingIn} 
               className="w-full gold-button py-5 flex items-center justify-center gap-3 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {isLoggingIn ? <Loader2 size={18} className="animate-spin" /> : 'Enter Dashboard'}
@@ -952,16 +886,10 @@ export default function Admin() {
                 <div className="md:col-span-2 pt-4">
                   <button 
                     type="submit" 
-                    disabled={!isAdminUser}
                     className="w-full gold-button py-5 disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     {editingProduct ? 'Update Masterpiece' : 'Craft Masterpiece'}
                   </button>
-                  {!isAdminUser && (
-                    <p className="text-[10px] text-red-400 text-center mt-4 uppercase tracking-widest">
-                      Firebase Authentication Required to Save
-                    </p>
-                  )}
                 </div>
               </form>
             </motion.div>

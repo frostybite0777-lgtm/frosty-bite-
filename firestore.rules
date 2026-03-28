@@ -35,12 +35,9 @@ service cloud.firestore {
     }
 
     function isAdmin() {
-      return isAuthenticated() &&
-        (
-          request.auth.token.email == "frostybite0777@gmail.com" ||
-          (exists(/databases/$(database)/documents/users/$(request.auth.uid)) && 
-           get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin')
-        );
+      // User requested to remove authentication from the admin panel.
+      // In a production app, this should be restricted to authenticated admin users.
+      return true; 
     }
 
     function hasOnlyAllowedFields(fields) {
@@ -116,29 +113,29 @@ service cloud.firestore {
 
     match /users/{userId} {
       allow read: if isOwner(userId) || isAdmin();
-      allow create: if isAuthenticated() && isValidUser(request.resource.data) && 
-                    ((isOwner(userId) && request.resource.data.role == 'client') || isAdmin());
-      allow update: if isAuthenticated() && isValidUser(request.resource.data) && 
-                    ((isOwner(userId) && request.resource.data.role == resource.data.role) || isAdmin());
+      allow create: if (isAuthenticated() && isValidUser(request.resource.data) && 
+                    ((isOwner(userId) && request.resource.data.role == 'client'))) || isAdmin();
+      allow update: if (isAuthenticated() && isValidUser(request.resource.data) && 
+                    ((isOwner(userId) && request.resource.data.role == resource.data.role))) || isAdmin();
     }
 
     match /orders/{orderId} {
-      allow read: if isAuthenticated() && (resource.data.userId == request.auth.uid || isAdmin());
-      allow create: if isAuthenticated() && isValidOrder(request.resource.data);
+      allow read: if (isAuthenticated() && resource.data.userId == request.auth.uid) || isAdmin();
+      allow create: if (isAuthenticated() && isValidOrder(request.resource.data)) || isAdmin();
       allow update: if isAdmin();
     }
 
     match /coupons/{couponId} {
       allow read: if true; // Allow guests to check coupons
-      allow update: if isAuthenticated() && 
+      allow update: if (isAuthenticated() || isAdmin()) && 
                     request.resource.data.diff(resource.data).affectedKeys().hasOnly(['usageCount']) &&
                     request.resource.data.usageCount == resource.data.usageCount + 1;
       allow write: if isAdmin();
     }
 
     match /redemptions/{redemptionId} {
-      allow read: if isAuthenticated() && (resource.data.userId == request.auth.uid || isAdmin());
-      allow create: if isAuthenticated() && isValidRedemption(request.resource.data);
+      allow read: if (isAuthenticated() && resource.data.userId == request.auth.uid) || isAdmin();
+      allow create: if (isAuthenticated() && isValidRedemption(request.resource.data)) || isAdmin();
     }
 
     match /carts/{userId} {
